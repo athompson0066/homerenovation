@@ -815,14 +815,11 @@ export function RenovationWizard() {
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
+          display: none;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #e5e5e5;
-          border-radius: 10px;
+        .custom-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </>

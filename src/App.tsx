@@ -52,8 +52,18 @@ function MainApp() {
       }
       body { 
         font-family: var(--font-sans) !important; 
-        ${isWidgetMode ? 'background: transparent !important;' : ''}
+        ${isWidgetMode ? `
+          background: transparent !important; 
+          overflow-y: auto !important;
+          -ms-overflow-style: none !important;
+          scrollbar-width: none !important;
+        ` : ''}
       }
+      ${isWidgetMode ? `
+        body::-webkit-scrollbar {
+          display: none !important;
+        }
+      ` : ''}
       .font-serif { font-family: var(--font-serif) !important; }
       .font-sans { font-family: var(--font-sans) !important; }
     `;
