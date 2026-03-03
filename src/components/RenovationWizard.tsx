@@ -147,7 +147,8 @@ export function RenovationWizard() {
     }
   }, [config.fabIcon]);
 
-  const [isOpen, setIsOpen] = useState(false);
+  const isWidgetMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('widget') === 'true';
+  const [isOpen, setIsOpen] = useState(isWidgetMode);
   const [currentStep, setCurrentStep] = useState(1);
   const [selections, setSelections] = useState<{
     serviceId?: string;
@@ -275,33 +276,43 @@ export function RenovationWizard() {
   return (
     <>
       {/* FAB */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center z-[9998] cursor-pointer text-white"
-        style={{ backgroundColor: config.primaryColor }}
-      >
-        <FabIcon size={24} />
-      </motion.button>
+      {!isWidgetMode && (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-8 right-8 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center z-[9998] cursor-pointer text-white"
+          style={{ backgroundColor: config.primaryColor }}
+        >
+          <FabIcon size={24} />
+        </motion.button>
+      )}
 
       {/* Modal */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 flex items-center justify-center p-4 md:p-8 z-[9999]">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
+          <div className={cn(
+            "fixed inset-0 flex items-center justify-center z-[9999]",
+            isWidgetMode ? "p-0" : "p-4 md:p-8"
+          )}>
+            {!isWidgetMode && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsOpen(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              />
+            )}
             
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={isWidgetMode ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white w-full max-w-4xl h-[90vh] md:h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/20"
+              exit={isWidgetMode ? { opacity: 1 } : { opacity: 0, scale: 0.95, y: 20 }}
+              className={cn(
+                "relative bg-white w-full shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/20",
+                isWidgetMode ? "h-full max-w-none rounded-none" : "max-w-4xl h-[90vh] md:h-[80vh] rounded-3xl"
+              )}
             >
               {/* Sidebar */}
               <div className="hidden md:flex md:w-1/3 bg-neutral-900 relative overflow-hidden group">
@@ -338,12 +349,14 @@ export function RenovationWizard() {
               {/* Content */}
               <div className="flex-1 flex flex-col bg-white">
                 <div className="p-6 border-b border-neutral-100 space-y-6 text-center relative">
-                  <button 
-                    onClick={() => setIsOpen(false)}
-                    className="absolute right-4 top-4 text-neutral-400 hover:text-neutral-900 transition-colors p-2 rounded-full hover:bg-neutral-50 z-10"
-                  >
-                    <X size={20} />
-                  </button>
+                  {!isWidgetMode && (
+                    <button 
+                      onClick={() => setIsOpen(false)}
+                      className="absolute right-4 top-4 text-neutral-400 hover:text-neutral-900 transition-colors p-2 rounded-full hover:bg-neutral-50 z-10"
+                    >
+                      <X size={20} />
+                    </button>
+                  )}
 
                   <div className="flex flex-col items-center">
                     <div className="space-y-1">
