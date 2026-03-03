@@ -44,10 +44,10 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
   if (!isOpen) return null;
 
-  const appUrl = 'https://ais-pre-6qtf7xvtbantvdblrm2cxw-104294895427.us-east1.run.app';
+  const appUrl = 'https://homerenovation-alpha.vercel.app/';
 
   const inlineEmbedCode = `<iframe 
-  src="${appUrl}" 
+  src="${appUrl}?widget=true" 
   width="100%" 
   height="700px" 
   style="border:none; border-radius:24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);"
@@ -56,7 +56,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const floatingEmbedCode = `<script>
   (function() {
     const iframe = document.createElement('iframe');
-    iframe.src = '${appUrl}';
+    iframe.src = '${appUrl}?widget=true';
     iframe.style.cssText = 'position:fixed; bottom:20px; right:20px; width:400px; height:600px; border:none; border-radius:24px; z-index:99999; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);';
     document.body.appendChild(iframe);
   })();

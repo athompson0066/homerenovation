@@ -59,7 +59,7 @@ function MainApp() {
   return (
     <div className={cn(
       "min-h-screen flex flex-col items-center justify-center text-center overflow-hidden transition-colors duration-500",
-      isWidgetMode ? "bg-white" : "bg-[#f5f2ed] p-8"
+      isWidgetMode ? "bg-transparent" : "bg-[#f5f2ed] p-8"
     )}>
       {/* Admin Toggle */}
       {!isWidgetMode && (

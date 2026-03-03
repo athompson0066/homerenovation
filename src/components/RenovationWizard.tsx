@@ -148,7 +148,7 @@ export function RenovationWizard() {
   }, [config.fabIcon]);
 
   const isWidgetMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('widget') === 'true';
-  const [isOpen, setIsOpen] = useState(isWidgetMode);
+  const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [selections, setSelections] = useState<{
     serviceId?: string;
@@ -276,17 +276,18 @@ export function RenovationWizard() {
   return (
     <>
       {/* FAB */}
-      {!isWidgetMode && (
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-8 right-8 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center z-[9998] cursor-pointer text-white"
-          style={{ backgroundColor: config.primaryColor }}
-        >
-          <FabIcon size={24} />
-        </motion.button>
-      )}
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setIsOpen(true)}
+        className={cn(
+          "fixed bottom-8 right-8 w-16 h-16 rounded-full shadow-2xl flex items-center justify-center z-[9998] cursor-pointer text-white transition-opacity duration-300",
+          isOpen && isWidgetMode ? "opacity-0 pointer-events-none" : "opacity-100"
+        )}
+        style={{ backgroundColor: config.primaryColor }}
+      >
+        <FabIcon size={24} />
+      </motion.button>
 
       {/* Modal */}
       <AnimatePresence>
@@ -349,14 +350,13 @@ export function RenovationWizard() {
               {/* Content */}
               <div className="flex-1 flex flex-col bg-white">
                 <div className="p-6 border-b border-neutral-100 space-y-6 text-center relative">
-                  {!isWidgetMode && (
-                    <button 
-                      onClick={() => setIsOpen(false)}
-                      className="absolute right-4 top-4 text-neutral-400 hover:text-neutral-900 transition-colors p-2 rounded-full hover:bg-neutral-50 z-10"
-                    >
-                      <X size={20} />
-                    </button>
-                  )}
+                  <button 
+                    onClick={() => setIsOpen(false)}
+                    className="absolute right-4 top-4 text-neutral-500 hover:text-neutral-900 transition-all p-3 rounded-full hover:bg-neutral-200 z-[100] bg-white shadow-lg border border-neutral-100"
+                    aria-label="Close estimator"
+                  >
+                    <X size={28} strokeWidth={2.5} />
+                  </button>
 
                   <div className="flex flex-col items-center">
                     <div className="space-y-1">
