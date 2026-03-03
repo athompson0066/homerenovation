@@ -50,7 +50,10 @@ function MainApp() {
         --heading-font: "${config.typography.headingFont}", serif;
         --body-font: "${config.typography.bodyFont}", sans-serif;
       }
-      body { font-family: var(--font-sans) !important; }
+      body { 
+        font-family: var(--font-sans) !important; 
+        ${isWidgetMode ? 'background: transparent !important;' : ''}
+      }
       .font-serif { font-family: var(--font-serif) !important; }
       .font-sans { font-family: var(--font-sans) !important; }
     `;

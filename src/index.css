@@ -6,8 +6,8 @@
   --font-sans: "Inter", sans-serif;
 }
 
-body {
-  background-color: #f5f2ed;
+html, body {
+  background-color: transparent;
   color: #1a1a1a;
   -webkit-font-smoothing: antialiased;
 }
