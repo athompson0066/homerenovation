@@ -15,10 +15,11 @@ import { cn } from './lib/utils';
 
 function MainApp() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const { config } = useConfig();
+  const { config, isLoading } = useConfig();
   const isWidgetMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('widget') === 'true';
 
   useEffect(() => {
+    if (isLoading) return;
     // Load all fonts for preview and the selected ones for the app
     const allFonts = Array.from(new Set(FONT_PAIRINGS.flatMap(p => [p.heading, p.body])));
     const fontQuery = allFonts.map(f => `family=${f.replace(/ /g, '+')}:wght@300;400;500;600;700`).join('&');
@@ -66,6 +67,18 @@ function MainApp() {
       .font-sans { font-family: var(--font-sans) !important; }
     `;
   }, [config.typography]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f2ed]">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-4 border-neutral-200 border-t-indigo-500 rounded-full"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={cn(

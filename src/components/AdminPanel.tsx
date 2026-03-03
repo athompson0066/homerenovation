@@ -38,16 +38,31 @@ const ICONS = [
 ];
 
 export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
-  const { config, updateConfig, updateServicePricing, updateGlobalMultiplier, updateFeatures, updateHeader, updateTypography } = useConfig();
+  const { 
+    config, 
+    allConfigs, 
+    loadConfig, 
+    saveConfig, 
+    deleteConfig,
+    updateConfig, 
+    updateServicePricing, 
+    updateGlobalMultiplier, 
+    updateFeatures, 
+    updateHeader, 
+    updateTypography 
+  } = useConfig();
   const [selectedServiceId, setSelectedServiceId] = React.useState('kitchen');
   const [copiedType, setCopiedType] = React.useState<string | null>(null);
+  const [activeTab, setActiveTab] = React.useState<'config' | 'forms'>('config');
+  const [newFormName, setNewFormName] = React.useState('');
 
   if (!isOpen) return null;
 
   const appUrl = 'https://homerenovation-alpha.vercel.app/';
+  const formIdParam = config.id ? `&formId=${config.id}` : '';
 
   const inlineEmbedCode = `<iframe 
-  src="${appUrl}?widget=true" 
+  src="${appUrl}?widget=true${formIdParam}" 
   width="100%" 
   height="700px" 
   style="border:none; border-radius:24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);"
@@ -56,11 +71,29 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const floatingEmbedCode = `<script>
   (function() {
     const iframe = document.createElement('iframe');
-    iframe.src = '${appUrl}?widget=true';
+    iframe.src = '${appUrl}?widget=true${formIdParam}';
     iframe.style.cssText = 'position:fixed; bottom:20px; right:20px; width:400px; height:600px; border:none; border-radius:24px; z-index:99999; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);';
     document.body.appendChild(iframe);
   })();
 </script>`;
+
+  const handleCreateForm = async () => {
+    if (!newFormName.trim()) return;
+    const id = Math.random().toString(36).substring(2, 9);
+    await saveConfig(id, newFormName, { ...config, id, name: newFormName });
+    setNewFormName('');
+    await loadConfig(id);
+    setActiveTab('config');
+  };
+
+  const handleSaveCurrent = async () => {
+    if (!config.id) {
+      setActiveTab('forms');
+      return;
+    }
+    await saveConfig(config.id, config.name || 'Untitled', config);
+    alert('Configuration saved successfully!');
+  };
 
   const handleCopy = (code: string, type: string) => {
     navigator.clipboard.writeText(code);
@@ -96,7 +129,100 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-        {/* Branding Section */}
+        {/* Tabs */}
+        <div className="flex gap-2 p-1 bg-neutral-100 rounded-xl">
+          <button 
+            onClick={() => setActiveTab('config')}
+            className={cn(
+              "flex-1 py-2 text-[10px] uppercase tracking-wider font-bold rounded-lg transition-all",
+              activeTab === 'config' ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-700"
+            )}
+          >
+            Configuration
+          </button>
+          <button 
+            onClick={() => setActiveTab('forms')}
+            className={cn(
+              "flex-1 py-2 text-[10px] uppercase tracking-wider font-bold rounded-lg transition-all",
+              activeTab === 'forms' ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-700"
+            )}
+          >
+            Forms Manager
+          </button>
+        </div>
+
+        {activeTab === 'forms' ? (
+          <div className="space-y-6">
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 text-neutral-900 font-semibold">
+                <Plus size={18} className="text-emerald-500" />
+                <h3>Create New Form</h3>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Company/Form Name..."
+                  value={newFormName}
+                  onChange={(e) => setNewFormName(e.target.value)}
+                  className="flex-1 px-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
+                />
+                <button 
+                  onClick={handleCreateForm}
+                  className="px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all"
+                >
+                  <Plus size={20} />
+                </button>
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 text-neutral-900 font-semibold">
+                <Layout size={18} className="text-indigo-500" />
+                <h3>Your Forms</h3>
+              </div>
+              <div className="space-y-2">
+                {allConfigs.map((f) => (
+                  <div 
+                    key={f.id}
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                      config.id === f.id ? "bg-indigo-50 border-indigo-200" : "bg-white border-neutral-100 hover:border-neutral-200"
+                    )}
+                  >
+                    <div className="flex-1 cursor-pointer" onClick={() => loadConfig(f.id)}>
+                      <p className="font-bold text-sm">{f.name}</p>
+                      <p className="text-[10px] text-neutral-400 font-mono">ID: {f.id}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => loadConfig(f.id)}
+                        className={cn(
+                          "p-2 rounded-lg transition-all",
+                          config.id === f.id ? "bg-indigo-500 text-white" : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200"
+                        )}
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button 
+                        onClick={() => deleteConfig(f.id)}
+                        className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-all"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {allConfigs.length === 0 && (
+                  <div className="text-center py-8 text-neutral-400">
+                    <p className="text-sm italic">No forms created yet.</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        ) : (
+          <>
+            {/* Branding Section */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-neutral-900 font-semibold">
             <Palette size={18} className="text-indigo-500" />
@@ -427,14 +553,28 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             </div>
           </div>
         </section>
-      </div>
+      </>
+    )}
+  </div>
 
-      <div className="p-6 border-t border-neutral-100 bg-neutral-50">
+      <div className="p-6 border-t border-neutral-100 bg-neutral-50 flex gap-3">
+        {activeTab === 'config' && (
+          <button 
+            onClick={handleSaveCurrent}
+            className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2"
+          >
+            <Check size={18} />
+            Save Changes
+          </button>
+        )}
         <button 
           onClick={onClose}
-          className="w-full py-3 bg-[#1a1a1a] text-white rounded-xl font-medium hover:bg-neutral-800 transition-all shadow-lg"
+          className={cn(
+            "py-3 rounded-xl font-medium transition-all shadow-lg",
+            activeTab === 'config' ? "px-6 bg-neutral-200 text-neutral-700 hover:bg-neutral-300" : "w-full bg-[#1a1a1a] text-white hover:bg-neutral-800"
+          )}
         >
-          Return to Widget View
+          {activeTab === 'config' ? 'Close' : 'Return to Widget View'}
         </button>
       </div>
 

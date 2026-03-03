@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export interface ServicePricing {
   small: number;
@@ -7,6 +7,8 @@ export interface ServicePricing {
 }
 
 export interface WidgetConfig {
+  id?: string;
+  name?: string;
   companyName: string;
   primaryColor: string;
   fabIcon: string;
@@ -72,6 +74,11 @@ const DEFAULT_CONFIG: WidgetConfig = {
 
 interface ConfigContextType {
   config: WidgetConfig;
+  allConfigs: { id: string; name: string }[];
+  isLoading: boolean;
+  loadConfig: (id: string) => Promise<void>;
+  saveConfig: (id: string, name: string, data: WidgetConfig) => Promise<void>;
+  deleteConfig: (id: string) => Promise<void>;
   updateConfig: (newConfig: Partial<WidgetConfig>) => void;
   updateServicePricing: (serviceId: string, pricing: Partial<ServicePricing>) => void;
   updateGlobalMultiplier: (multiplier: number) => void;
@@ -84,6 +91,75 @@ const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<WidgetConfig>(DEFAULT_CONFIG);
+  const [allConfigs, setAllConfigs] = useState<{ id: string; name: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchAllConfigs = async () => {
+    try {
+      const res = await fetch('/api/configs');
+      const data = await res.json();
+      setAllConfigs(data);
+    } catch (error) {
+      console.error('Failed to fetch configs:', error);
+    }
+  };
+
+  const loadConfig = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/configs/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setConfig(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to load config:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveConfig = async (id: string, name: string, data: WidgetConfig) => {
+    try {
+      const res = await fetch('/api/configs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, name, data }),
+      });
+      if (res.ok) {
+        await fetchAllConfigs();
+      }
+    } catch (error) {
+      console.error('Failed to save config:', error);
+    }
+  };
+
+  const deleteConfig = async (id: string) => {
+    try {
+      const res = await fetch(`/api/configs/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        await fetchAllConfigs();
+      }
+    } catch (error) {
+      console.error('Failed to delete config:', error);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const formId = params.get('formId');
+    
+    const init = async () => {
+      await fetchAllConfigs();
+      if (formId) {
+        await loadConfig(formId);
+      } else {
+        setIsLoading(false);
+      }
+    };
+    
+    init();
+  }, []);
 
   const updateConfig = (newConfig: Partial<WidgetConfig>) => {
     setConfig(prev => ({ ...prev, ...newConfig }));
@@ -131,7 +207,20 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ConfigContext.Provider value={{ config, updateConfig, updateServicePricing, updateGlobalMultiplier, updateFeatures, updateHeader, updateTypography }}>
+    <ConfigContext.Provider value={{ 
+      config, 
+      allConfigs, 
+      isLoading,
+      loadConfig,
+      saveConfig,
+      deleteConfig,
+      updateConfig, 
+      updateServicePricing, 
+      updateGlobalMultiplier, 
+      updateFeatures, 
+      updateHeader, 
+      updateTypography 
+    }}>
       {children}
     </ConfigContext.Provider>
   );
