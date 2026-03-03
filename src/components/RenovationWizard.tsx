@@ -293,8 +293,8 @@ export function RenovationWizard() {
       <AnimatePresence>
         {isOpen && (
           <div className={cn(
-            "fixed inset-0 flex items-center justify-center z-[9999]",
-            isWidgetMode ? "p-0" : "p-4 md:p-8"
+            "fixed inset-0 z-[9999] custom-scrollbar",
+            isWidgetMode ? "p-0 overflow-y-auto" : "p-4 md:p-8 flex items-center justify-center overflow-hidden"
           )}>
             {!isWidgetMode && (
               <motion.div
@@ -311,8 +311,8 @@ export function RenovationWizard() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={isWidgetMode ? { opacity: 1 } : { opacity: 0, scale: 0.95, y: 20 }}
               className={cn(
-                "relative bg-white w-full shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/20",
-                isWidgetMode ? "h-full max-w-none rounded-none" : "max-w-4xl h-[90vh] md:h-[80vh] rounded-3xl"
+                "relative bg-white w-full shadow-2xl flex flex-col md:flex-row border border-white/20",
+                isWidgetMode ? "min-h-full max-w-none rounded-none" : "max-w-4xl h-[90vh] md:h-[80vh] rounded-3xl overflow-hidden"
               )}
             >
               {/* Sidebar */}
@@ -378,7 +378,10 @@ export function RenovationWizard() {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar">
+                <div className={cn(
+                  "flex-1 p-6 md:p-10",
+                  isWidgetMode ? "" : "overflow-y-auto custom-scrollbar"
+                )}>
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={currentStep}

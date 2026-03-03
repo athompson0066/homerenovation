@@ -54,9 +54,7 @@ function MainApp() {
         font-family: var(--font-sans) !important; 
         ${isWidgetMode ? `
           background: transparent !important; 
-          overflow-y: auto !important;
-          -ms-overflow-style: none !important;
-          scrollbar-width: none !important;
+          overflow: hidden !important;
         ` : ''}
       }
       ${isWidgetMode ? `
