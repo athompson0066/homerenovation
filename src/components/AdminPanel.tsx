@@ -18,7 +18,10 @@ import {
   Sparkles as SparklesIcon,
   MessageSquare as MessageIcon,
   Plus,
-  Type
+  Type,
+  Trash2,
+  PlusCircle,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useConfig } from '../context/ConfigContext';
 import { cn } from '../lib/utils';
@@ -49,7 +52,10 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     updateGlobalMultiplier, 
     updateFeatures, 
     updateHeader, 
-    updateTypography 
+    updateTypography,
+    addService,
+    updateService,
+    deleteService
   } = useConfig();
   const [selectedServiceId, setSelectedServiceId] = React.useState('kitchen');
   const [copiedType, setCopiedType] = React.useState<string | null>(null);
@@ -366,13 +372,9 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 onChange={(e) => setSelectedServiceId(e.target.value)}
                 className="w-full px-4 py-2 bg-white border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
               >
-                <option value="custom-homes">Custom Homes</option>
-                <option value="full-renovations">Full Home Renovations</option>
-                <option value="kitchen">Kitchen</option>
-                <option value="bathroom">Bathroom</option>
-                <option value="basement">Basement</option>
-                <option value="additions">Home Additions</option>
-                <option value="condo">Condo Renovations</option>
+                {config.services.map(s => (
+                  <option key={s.id} value={s.id}>{s.title}</option>
+                ))}
               </select>
             </div>
 
@@ -425,6 +427,201 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 <p className="text-[10px] text-neutral-400 italic">Adjusts all estimates by this factor (e.g., 1.20 = 20% markup).</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Services Management Section */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-neutral-900 font-semibold">
+            <Layout size={18} className="text-blue-500" />
+            <h3>Services Management</h3>
+          </div>
+          <div className="space-y-4 bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+            <div className="space-y-3">
+              {config.services.map((service) => (
+                <div key={service.id} className="p-4 bg-white rounded-xl border border-neutral-100 shadow-sm space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-[8px] uppercase tracking-wider font-bold text-neutral-400">Service Title</label>
+                        <input
+                          type="text"
+                          value={service.title}
+                          onChange={(e) => updateService(service.id, { title: e.target.value })}
+                          className="w-full px-3 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] uppercase tracking-wider font-bold text-neutral-400">External Image URL</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={service.image}
+                            onChange={(e) => updateService(service.id, { image: e.target.value })}
+                            className="flex-1 px-3 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                            placeholder="https://images.unsplash.com/..."
+                          />
+                          <div className="w-8 h-8 rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 flex items-center justify-center shrink-0">
+                            {service.image ? (
+                              <img src={service.image} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <ImageIcon size={14} className="text-neutral-400" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 space-y-2">
+                        <label className="text-[8px] uppercase tracking-wider font-bold text-neutral-400">Scope Questions (Tiers)</label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {service.scopes.map((scope, idx) => (
+                            <div key={scope.id} className="p-2 bg-neutral-50 rounded-lg border border-neutral-100 space-y-2">
+                              <div className="flex gap-2">
+                                <div className="flex-1 space-y-1">
+                                  <label className="text-[7px] uppercase font-bold text-neutral-400">Tier Label</label>
+                                  <input
+                                    type="text"
+                                    value={scope.label}
+                                    onChange={(e) => {
+                                      const newScopes = [...service.scopes];
+                                      newScopes[idx] = { ...scope, label: e.target.value };
+                                      updateService(service.id, { scopes: newScopes });
+                                    }}
+                                    className="w-full px-2 py-1 bg-white border border-neutral-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </div>
+                                <div className="w-24 space-y-1">
+                                  <label className="text-[7px] uppercase font-bold text-neutral-400">Base Price ($)</label>
+                                  <input
+                                    type="number"
+                                    value={service.pricing?.[scope.id as keyof typeof service.pricing] || 0}
+                                    onChange={(e) => {
+                                      const val = Number(e.target.value);
+                                      const newPricing = { ...service.pricing, [scope.id]: val };
+                                      updateService(service.id, { pricing: newPricing as any });
+                                      updateServicePricing(service.id, { [scope.id]: val });
+                                    }}
+                                    className="w-full px-2 py-1 bg-white border border-neutral-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[7px] uppercase font-bold text-neutral-400">Description</label>
+                                <textarea
+                                  value={scope.description}
+                                  onChange={(e) => {
+                                    const newScopes = [...service.scopes];
+                                    newScopes[idx] = { ...scope, description: e.target.value };
+                                    updateService(service.id, { scopes: newScopes });
+                                  }}
+                                  rows={1}
+                                  className="w-full px-2 py-1 bg-white border border-neutral-200 rounded text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[8px] uppercase tracking-wider font-bold text-neutral-400">Add-on Features</label>
+                          <button
+                            onClick={() => {
+                              const newFeatures = [...(service.detailedFeatures || [])];
+                              newFeatures.push({
+                                id: Math.random().toString(36).substring(2, 9),
+                                label: 'New Feature',
+                                description: 'Feature description',
+                                price: 5000
+                              });
+                              updateService(service.id, { detailedFeatures: newFeatures });
+                            }}
+                            className="text-[8px] uppercase font-bold text-blue-500 hover:text-blue-700 flex items-center gap-1"
+                          >
+                            <Plus size={10} /> Add Feature
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {(service.detailedFeatures || []).map((feature, fIdx) => (
+                            <div key={feature.id} className="p-2 bg-neutral-50 rounded-lg border border-neutral-100 space-y-2">
+                              <div className="flex gap-2">
+                                <div className="flex-1 space-y-1">
+                                  <label className="text-[7px] uppercase font-bold text-neutral-400">Feature Label</label>
+                                  <input
+                                    type="text"
+                                    value={feature.label}
+                                    onChange={(e) => {
+                                      const newFeatures = [...(service.detailedFeatures || [])];
+                                      newFeatures[fIdx] = { ...feature, label: e.target.value };
+                                      updateService(service.id, { detailedFeatures: newFeatures });
+                                    }}
+                                    className="w-full px-2 py-1 bg-white border border-neutral-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </div>
+                                <div className="w-24 space-y-1">
+                                  <label className="text-[7px] uppercase font-bold text-neutral-400">Price ($)</label>
+                                  <input
+                                    type="number"
+                                    value={feature.price}
+                                    onChange={(e) => {
+                                      const newFeatures = [...(service.detailedFeatures || [])];
+                                      newFeatures[fIdx] = { ...feature, price: Number(e.target.value) };
+                                      updateService(service.id, { detailedFeatures: newFeatures });
+                                    }}
+                                    className="w-full px-2 py-1 bg-white border border-neutral-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    const newFeatures = (service.detailedFeatures || []).filter((_, i) => i !== fIdx);
+                                    updateService(service.id, { detailedFeatures: newFeatures });
+                                  }}
+                                  className="self-end p-1.5 text-neutral-400 hover:text-red-500 transition-colors"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          {(!service.detailedFeatures || service.detailedFeatures.length === 0) && (
+                            <p className="text-[9px] text-neutral-400 italic text-center py-2">No add-on features defined.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => deleteService(service.id)}
+                      className="ml-2 p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => {
+                const id = Math.random().toString(36).substring(2, 9);
+                addService({
+                  id,
+                  title: 'New Service',
+                  image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1000',
+                  scopes: [
+                    { id: 'small', label: 'Basic', description: 'Standard level service.', basePrice: 10000 },
+                    { id: 'medium', label: 'Premium', description: 'High-end level service.', basePrice: 25000 },
+                    { id: 'large', label: 'Elite', description: 'Bespoke luxury service.', basePrice: 50000 }
+                  ],
+                  pricing: { small: 10000, medium: 25000, large: 50000 }
+                });
+                setSelectedServiceId(id);
+              }}
+              className="w-full py-3 border-2 border-dashed border-neutral-200 rounded-xl text-neutral-400 hover:text-blue-500 hover:border-blue-200 hover:bg-blue-50 transition-all flex items-center justify-center gap-2 font-medium text-sm"
+            >
+              <PlusCircle size={18} />
+              Add New Service
+            </button>
           </div>
         </section>
 
